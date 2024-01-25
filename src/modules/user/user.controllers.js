@@ -6,14 +6,14 @@ import generateUserToken from '../../utils/generateUserToken.js'
 import OTP from '../../../DB/models/OTP.model.js'
 import generateUniqueString from '../../utils/generateUniqueString.js'
 import cloudinaryConnection from '../../utils/mediaHostConnection.js'
+/**
+ * 1- Check Email if it is existed
+ * 2- Check Mobil Number if it is existed
+ * 3- Create username
+ * 4- Hashing Password
+ * 5- Create New User
+ */
 export const signUp = async (req, res, next) => {
-  /**
-   * 1- Check Email if it is existed
-   * 2- Check Mobil Number if it is existed
-   * 3- Create username
-   * 4- Hashing Password
-   * 5- Create New User
-   */
   const {
     firstName,
     lastName,
@@ -24,11 +24,12 @@ export const signUp = async (req, res, next) => {
     mobileNumber,
     role,
   } = req.body
-
+  // 1- Check Email if it is existed
   const isEmailExisted = await dbMethods.findOneDocument(User, { email })
   if (isEmailExisted.success) {
     return next(new Error('this Email is already existed', { cause: 400 }))
   }
+  // 2- Check Mobil Number if it is existed
   const isMobileNumberExisted = await dbMethods.findOneDocument(User, {
     mobileNumber,
   })
@@ -37,15 +38,17 @@ export const signUp = async (req, res, next) => {
       new Error('this mobile number is already existed', { cause: 400 })
     )
   }
-
+  // 3- Create username
   const username = `${firstName.toLowerCase().trim()} ${lastName
     .toLowerCase()
     .trim()}`
 
+  // 4- Hashing Password
   const hashedPassword = bcryptjs.hashSync(
     password.trim(),
     parseInt(process.env.SALT)
   )
+  //  5- Create New User
   const newUser = await dbMethods.createDocument(User, {
     firstName,
     lastName,
@@ -68,17 +71,18 @@ export const signUp = async (req, res, next) => {
   })
 }
 
+/*
+1- Check on Incoming Data
+2- Find User with email  or mobile number
+3- Check if incoming password doesn't match the Database hashed password
+4- Create Token
+5- Send token and profile data in response
+*/
 export const signIn = async (req, res, next) => {
-  /*
-  1- Check on Incoming Data
-  2- Find User with email  or mobile number
-  3- Check if incoming password doesn't match the Database hashed password
-  4- Create Token
-  5- Send token and profile data in response
-  */
-
   const { email, mobileNumber, password } = req.body
   let user
+  // 1- Check on Incoming Data
+  // 2- Find User with email  or mobile number
   if (email) {
     user = await dbMethods.findOneDocument(User, { email })
     if (!user.success) {
@@ -92,6 +96,7 @@ export const signIn = async (req, res, next) => {
     }
   }
 
+  // 3- Check if incoming password doesn't match the Database hashed password
   const isPasswordMatched = bcryptjs.compareSync(password, user.result.password)
   if (!isPasswordMatched) {
     return next(
@@ -102,24 +107,28 @@ export const signIn = async (req, res, next) => {
   }
   user.result.status = 'online'
   await user.result.save()
+
+  // 4- Create Token
   const token = generateUserToken({ id: user.result._id.toString() })
+  // 5- Send token and profile data in response
   res
     .status(user.status)
     .json({ message: user.message, user: user.result, token })
 }
 
+/**
+ * check Email if it's existed for another user
+ * check mobile Number if it's  existed for another user
+ * Get the user by id
+ * update values if they're sent
+ * if Email is sent, check if it's not equal recovery email, to get account back
+ * if Recovery Email is sent, check if it's not equal email, to get account back
+ */
 export const updateProfile = async (req, res, next) => {
-  /**
-   * check Email if it's existed for another user
-   * check mobile Number if it's  existed for another user
-   * Get the user by id
-   * update values if they're sent
-   * if Email is sent, check if it's not equal recovery email, to get account back
-   * if Recovery Email is sent, check if it's not equal email, to get account back
-   */
   const { firstName, lastName, email, DOB, mobileNumber, recoveryEmail } =
     req.body
   const { authUser } = req
+  //  check Email if it's existed for another user
   if (email) {
     const isUserExisted = await dbMethods.findOneDocument(User, { email })
     if (
@@ -133,6 +142,7 @@ export const updateProfile = async (req, res, next) => {
       )
     }
   }
+  //   check mobile Number if it's  existed for another user
   if (mobileNumber) {
     const isMobileNumberExisted = await dbMethods.findOneDocument(User, {
       mobileNumber,
@@ -152,10 +162,13 @@ export const updateProfile = async (req, res, next) => {
     }
   }
 
+  //  Get the user by id
   const user = await dbMethods.findByIdDocument(User, authUser._id)
+  // update values if they're sent
   firstName && (user.result.firstName = firstName.trim())
   lastName && (user.result.lastName = lastName.trim())
   user.result.username = `${user.result.firstName} ${user.result.lastName}`
+  // if Email is sent, check if it's not equal recovery email, to get account back
   if (email) {
     if (email !== user.result.recoveryEmail) {
       user.result.email = email
@@ -172,6 +185,7 @@ export const updateProfile = async (req, res, next) => {
 
   mobileNumber && (user.result.mobileNumber = mobileNumber)
 
+  // if Recovery Email is sent, check if it's not equal email, to get account back
   if (recoveryEmail) {
     if (recoveryEmail !== user.result.email) {
       user.result.recoveryEmail = recoveryEmail
@@ -193,9 +207,13 @@ export const updateProfile = async (req, res, next) => {
     user: user.result,
   })
 }
-
+/**
+ * Find User and Delete using Id
+ *  delete Assets
+ */
 export const deleteProfile = async (req, res, next) => {
   const { authUser } = req
+  // Find User and Delete using Id
   const deleteUser = await dbMethods.findByIdAndDeleteDocument(
     User,
     authUser._id
@@ -204,14 +222,24 @@ export const deleteProfile = async (req, res, next) => {
   if (!deleteUser.success) {
     return next(new Error('Error while deleting User'))
   }
-
+  // delete Assets
+  try {
+    await cloudinaryConnection().api.delete_resources_by_prefix(
+      `jobSearchApp/users/${authUser._id}`
+    )
+    await cloudinaryConnection().api.delete_folder(
+      `jobSearchApp/users/${authUser._id}`
+    )
+  } catch (error) {
+    return next(new Error(`Error While deleting media ${error}`))
+  }
   res.status(200).json({ message: 'User has been deleted successfully' })
 }
 
+/**
+ * Private profile for the owner of the account
+ */
 export const getPrivateProfile = async (req, res, next) => {
-  /**
-   * Private profile for the owner of the account
-   */
   const { authUser } = req
   const getUser = await dbMethods.findByIdDocument(User, authUser._id)
 
@@ -222,10 +250,10 @@ export const getPrivateProfile = async (req, res, next) => {
   res.status(200).json({ message: 'User', user: getUser.result })
 }
 
+/**
+ * public profile is used to share account across other users
+ */
 export const getPublicProfile = async (req, res, next) => {
-  /**
-   * public profile is used to share account across other users
-   */
   const { userId } = req.params
   const getUser = await dbMethods.findByIdDocument(User, userId)
 
@@ -235,16 +263,17 @@ export const getPublicProfile = async (req, res, next) => {
 
   res.status(200).json({ message: 'User', user: getUser.result })
 }
-export const updatePassword = async (req, res, next) => {
-  /**
-   * check if user is still existed in DB
-   * check if oldPassword equals the user password which came from DB
-   * hashing the new password
-   * update it 🔥
-   */
 
+/**
+ * check if user is still existed in DB
+ * check if oldPassword equals the user password which came from DB
+ * hashing the new password
+ * update it 🔥
+ */
+export const updatePassword = async (req, res, next) => {
   const { authUser } = req
   const { oldPassword, newPassword } = req.body
+  // check if user is still existed in DB
   const isUserExisted = await dbMethods.findByIdDocument(User, authUser._id)
 
   if (!isUserExisted.success) {
@@ -252,7 +281,7 @@ export const updatePassword = async (req, res, next) => {
       new Error(isUserExisted.message, { cause: isUserExisted.status })
     )
   }
-
+  // check if oldPassword equals the user password which came from DB
   const isOldPasswordMatchUserPassword = bcryptjs.compareSync(
     oldPassword,
     isUserExisted.result.password
@@ -262,12 +291,12 @@ export const updatePassword = async (req, res, next) => {
       new Error("Old password isn't match the user password", { cause: 401 })
     )
   }
-
+  // hashing the new password
   const hashingNewPassword = bcryptjs.hashSync(
     newPassword,
     parseInt(process.env.SALT)
   )
-
+  // update it 🔥
   isUserExisted.result.password = hashingNewPassword
   await isUserExisted.result.save()
 
@@ -275,16 +304,18 @@ export const updatePassword = async (req, res, next) => {
     .status(200)
     .json({ message: 'User has been updated', user: isUserExisted.result })
 }
+
+/**
+ * Check if user in DB using email
+ * create unique random otp (length=6)
+ * Hashing the otp
+ * check if user gets otp doc in db, if TRUE, update it with new hashed OTP
+ * in case it's first time to forget password , create OTP document with email and hashed OTP code
+ * send it back to user and wait him to send it back through api "users/verifyOTPAndUpdatePassword"
+ */
 export const forgetPassword = async (req, res, next) => {
-  /**
-   * Check if user in DB using email
-   * create unique random otp (length=6)
-   * Hashing the otp
-   * check if user gets otp doc in db, if TRUE, update it with new hashed OTP
-   * in case it's first time to forget password , create OTP document with email and hashed OTP code
-   * send it back to user and wait him to send it back through api "users/verifyOTPAndUpdatePassword"
-   */
   const { email } = req.body
+  // Check if user in DB using email
   const isUserExisted = await dbMethods.findOneDocument(User, { email })
 
   if (!isUserExisted.success) {
@@ -292,9 +323,12 @@ export const forgetPassword = async (req, res, next) => {
       new Error(isUserExisted.message, { cause: isUserExisted.status })
     )
   }
+  // create unique random otp (length=6)
   const otp = generateUniqueString(6)
+  // Hashing the otp
   const hashedOTP = bcryptjs.hashSync(otp, parseInt(process.env.SALT))
 
+  // check if user gets otp doc in db, if TRUE, update it with new hashed OTP
   const isOTPDocExisted = await dbMethods.findOneDocument(OTP, { email })
 
   if (isOTPDocExisted.success) {
@@ -305,29 +339,35 @@ export const forgetPassword = async (req, res, next) => {
       OTP: otp,
     })
   }
+
+  // in case it's first time to forget password , create OTP document with email and hashed OTP code
   const newOTP = await dbMethods.createDocument(OTP, { email, otp: hashedOTP })
   if (!newOTP.success) {
     return next(new Error('Error while creating OTP, please try again'))
   }
+  // send it back to user and wait him to send it back through api "users/verifyOTPAndUpdatePassword"
   res.status(newOTP.status).json({
     message: "Please send OTP to 'users/verifyOTPAndUpdatePassword'",
     OTP: otp,
   })
 }
+
+/**
+ * Verify the Email user if it's existed in OTP collection
+ * check the OTP if it's not used before
+ * compare OTP for authentication case
+ * hashing the new password
+ * Get the user and update password with the new one
+ * send back the user data
+ */
 export const getOTPandNewPassword = async (req, res, next) => {
-  /**
-   * Verify the Email user if it's existed in OTP collection
-   * check the OTP if it's not used before
-   * compare OTP for authentication case
-   * hashing the new password
-   * Get the user and update password with the new one
-   * send back the user data
-   */
   const { otp, email, newPassword } = req.body
+  // Verify the Email user if it's existed in OTP collection
   const isEmailExistedOTP = await dbMethods.findOneDocument(OTP, { email })
   if (!isEmailExistedOTP.success) {
     return next(new Error('Invalid Email, Please try again', { cause: 401 }))
   }
+  // check the OTP if it's not used before
   if (isEmailExistedOTP.result.isUsed) {
     return next(
       new Error('This OTP has been used before, Please try again', {
@@ -335,7 +375,7 @@ export const getOTPandNewPassword = async (req, res, next) => {
       })
     )
   }
-
+  // compare OTP for authentication case
   const isOTPRight = bcryptjs.compareSync(otp, isEmailExistedOTP.result.otp)
   if (!isOTPRight)
     return next(
@@ -343,10 +383,12 @@ export const getOTPandNewPassword = async (req, res, next) => {
         cause: 401,
       })
     )
+  // hashing the new password
   const hashingNewPassword = bcryptjs.hashSync(
     newPassword,
     parseInt(process.env.SALT)
   )
+  // Get the user and update password with the new one
   const getUser = await dbMethods.findOneDocument(User, {
     email,
   })
@@ -356,7 +398,7 @@ export const getOTPandNewPassword = async (req, res, next) => {
   await getUser.result.save()
   isEmailExistedOTP.result.isUsed = true
   await isEmailExistedOTP.result.save()
-
+  // send back the user data
   res
     .status(200)
     .json({ message: 'Updated password successfully', user: getUser.result })

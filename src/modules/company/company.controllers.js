@@ -3,10 +3,11 @@ import Company from '../../../DB/models/company.model.js'
 import Job from '../../../DB/models/job.model.js'
 import cloudinaryConnection from '../../utils/mediaHostConnection.js'
 
+/**
+ * check if company is existed
+ * create company
+ */
 export const createCompany = async (req, res, next) => {
-  /**
-   *
-   */
   const { authUser, isUserAuthorized } = req
   const {
     companyName,
@@ -18,6 +19,8 @@ export const createCompany = async (req, res, next) => {
   } = req.body
   if (!isUserAuthorized)
     return next(new Error('Not Authorized', { cause: 403 }))
+
+  // check if company is existed
   const isCompanyExisted = await dbMethods.findOneDocument(Company, {
     $or: [{ companyEmail }, { companyName }],
   })
@@ -28,6 +31,7 @@ export const createCompany = async (req, res, next) => {
       })
     )
   }
+  // Create Company
   const createCompany = await dbMethods.createDocument(Company, {
     companyName,
     description,
@@ -44,11 +48,12 @@ export const createCompany = async (req, res, next) => {
     .status(201)
     .json({ message: 'New Company', company: createCompany.result })
 }
+
+// check if there's company with companyEmailToUpdate and user id
+// if companyEmail will be updated, check if it's existed and not the same target company to be updated
+// if companyName will be updated, check if it's existed and not the same target company to be updated
+// Update each field if related value is sent in req.body
 export const updateCompany = async (req, res, next) => {
-  // check if there's company with companyEmailToUpdate and user id
-  // if companyEmail will be updated, check if it's existed and not the same target company to be updated
-  // if companyName will be updated, check if it's existed and not the same target company to be updated
-  // Update each field if related value is sent in req.body
   const { authUser, isUserAuthorized } = req
   const {
     companyEmailToUpdate,
@@ -61,7 +66,7 @@ export const updateCompany = async (req, res, next) => {
   } = req.body
   if (!isUserAuthorized)
     return next(new Error('Not Authorized', { cause: 403 }))
-
+  // check if there's company with companyEmailToUpdate and user id
   const isCompanyExisted = await dbMethods.findOneDocument(Company, {
     companyEmail: companyEmailToUpdate,
     companyHR: authUser._id.toString(),
@@ -75,7 +80,7 @@ export const updateCompany = async (req, res, next) => {
         }
       )
     )
-
+  // if companyEmail will be updated, check if it's existed and not the same target company to be updated
   if (companyEmail) {
     const isCompanyExistedWithCompanyEmail = await dbMethods.findOneDocument(
       Company,
@@ -98,6 +103,7 @@ export const updateCompany = async (req, res, next) => {
       )
     }
   }
+  // if companyName will be updated, check if it's existed and not the same target company to be updated
   if (companyName) {
     const isCompanyExistedWithCompanyName = await dbMethods.findOneDocument(
       Company,
@@ -121,6 +127,7 @@ export const updateCompany = async (req, res, next) => {
     }
   }
 
+  // Update each field if related value is sent in req.body
   companyName && (isCompanyExisted.result.companyName = companyName)
   description && (isCompanyExisted.result.description = description)
   industry && (isCompanyExisted.result.industry = industry)
@@ -133,14 +140,16 @@ export const updateCompany = async (req, res, next) => {
 
   res.status(200).json({ message: 'updated Company', company: updatedCompany })
 }
+
+// check if there's company with companyEmailToUpdate and user id
+//  delete it
+//  delete Media
 export const deleteCompany = async (req, res, next) => {
-  // check if there's company with companyEmailToUpdate and user id
-  //  delete it
   const { authUser, isUserAuthorized } = req
   const { companyEmailToDelete } = req.body
   if (!isUserAuthorized)
     return next(new Error('Not Authorized', { cause: 403 }))
-
+  // check if there's company with companyEmailToUpdate and user id
   const isCompanyExisted = await dbMethods.findOneDocument(Company, {
     companyEmail: companyEmailToDelete,
     companyHR: authUser._id.toString(),
@@ -154,6 +163,8 @@ export const deleteCompany = async (req, res, next) => {
         }
       )
     )
+
+  //  delete it
   const deleteCompany = await dbMethods.findByIdAndDeleteDocument(
     Company,
     isCompanyExisted.result._id
@@ -161,6 +172,7 @@ export const deleteCompany = async (req, res, next) => {
   if (!deleteCompany.success) {
     return next(new Error('Error while deleting the company from database'))
   }
+  //  delete Media
   try {
     await cloudinaryConnection().api.delete_resources_by_prefix(
       `jobSearchApp/companies/companyId-${isCompanyExisted.result._id}`
@@ -173,25 +185,31 @@ export const deleteCompany = async (req, res, next) => {
   }
   res.status(200).json({ message: 'Deleted Successfully' })
 }
+
+// get company using params when you're HR
 export const getCompany = async (req, res, next) => {
-  // get company using params when you're HR
   const { companyId } = req.params
   const { authUser, isUserAuthorized } = req
   if (!isUserAuthorized)
     return next(new Error('Not Authorized', { cause: 403 }))
 
-  const company = await dbMethods.findByIdDocument(Company, companyId)
-  if (!company.success)
+  // get company using params when you're HR and populate Jobs
+  const company = await Company.findById(companyId).populate('jobs')
+  if (!company)
     return next(
       new Error("There's no Company with this id", {
         cause: 404,
       })
     )
 
-  res.status(200).json({ message: 'Company', company: company.result })
+  res.status(200).json({ message: 'Company', company })
 }
+/**
+ * get companies using name in query
+ */
 export const searchCompanyUsingName = async (req, res, next) => {
   const { companyName } = req.query
+  // get companies using name in query
   const companies = await dbMethods.findDocuments(Company, {
     companyName: { $regex: companyName, $options: 'i' },
   })
@@ -204,6 +222,11 @@ export const searchCompanyUsingName = async (req, res, next) => {
   })
 }
 
+/**
+ * search on company using the HR id and company Id
+ * get applications from Job Model using virtual properties
+
+*/
 export const getCompanyJobsApplications = async (req, res, next) => {
   const { companyId } = req.params
   const { authUser, isUserAuthorized } = req
@@ -221,7 +244,7 @@ export const getCompanyJobsApplications = async (req, res, next) => {
       })
     )
 
-  // get
+  // get applications from Job Model using virtual properties
   const jobsWithApplications = await Job.find({ companyId }).populate({
     path: 'applications',
     populate: 'userId',

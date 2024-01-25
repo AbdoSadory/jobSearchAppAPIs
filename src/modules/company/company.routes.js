@@ -69,12 +69,4 @@ companyRouter.put(
   expressAsyncHandler(companyControllers.updateProfileImage)
 )
 
-// Bonus Points
-companyRouter.get(
-  '/companyJobsApplicationsExcelSheet/:companyId',
-  authHandler(),
-  authorizationHandler(userRolesConstants.HR),
-  validationMiddleware(companyDataValidationSchemas.getCompanyUsingIdSchema),
-  expressAsyncHandler(companyControllers.getCompanyJobsApplications)
-)
 export default companyRouter

@@ -4,11 +4,12 @@ import Company from '../../../DB/models/company.model.js'
 import Job from '../../../DB/models/job.model.js'
 import cloudinaryConnection from '../../utils/mediaHostConnection.js'
 import path from 'path'
+
+/**
+ * check if company is existed
+ * create Job
+ */
 export const addJob = async (req, res, next) => {
-  /**
-   * check if company is existed
-   *
-   */
   const { authUser, isUserAuthorized } = req
   if (!isUserAuthorized)
     return next(new Error('Not Authorized', { cause: 403 }))
@@ -23,12 +24,13 @@ export const addJob = async (req, res, next) => {
     softSkills,
   } = req.body
 
+  // check if company is existed
   const isCompanyExisted = await dbMethods.findOneDocument(Company, {
     companyEmail,
   })
   if (!isCompanyExisted.success)
     return next(new Error('No Company with this email', { cause: 400 }))
-
+  // create Job
   const newJob = await dbMethods.createDocument(Job, {
     jobTitle,
     jobLocation,
@@ -46,6 +48,7 @@ export const addJob = async (req, res, next) => {
   res.status(201).json({ message: 'New Job', job: newJob.result })
 }
 
+// Check if job is existed and update it
 export const updateJob = async (req, res, next) => {
   const { jobId } = req.params
   const { authUser, isUserAuthorized } = req
@@ -60,7 +63,7 @@ export const updateJob = async (req, res, next) => {
     technicalSkills,
     softSkills,
   } = req.body
-
+  // Check if job is existed and update it
   const isJobExisted = await Job.findOneAndUpdate(
     {
       _id: jobId,
@@ -90,12 +93,14 @@ export const updateJob = async (req, res, next) => {
     job: isJobExisted,
   })
 }
+
+// Check if job is existed and delete it
 export const deleteJob = async (req, res, next) => {
   const { jobId } = req.params
   const { authUser, isUserAuthorized } = req
   if (!isUserAuthorized)
     return next(new Error('Not Authorized', { cause: 403 }))
-
+  // Check if job is existed and delete it
   const isJobExisted = await dbMethods.findOneAndDeleteDocument(Job, {
     _id: jobId,
     addedBy: authUser._id,
@@ -105,6 +110,7 @@ export const deleteJob = async (req, res, next) => {
 
   res.status(200).json({ message: 'Job has been deleted successfully' })
 }
+
 export const getJobsWithCompanies = async (req, res, next) => {
   const jobs = await Job.find().populate('companyId')
   if (!jobs) return next(new Error('Error While getting jobs'))
@@ -112,6 +118,10 @@ export const getJobsWithCompanies = async (req, res, next) => {
   res.status(200).json({ message: 'Jobs', jobs })
 }
 
+/**
+ * get jobs of company using company name in query
+ * create array of jobs and flat it
+ */
 export const getJobsOfCompany = async (req, res, next) => {
   const { companyName } = req.query
   const { authUser, isUserAuthorized } = req
@@ -125,6 +135,7 @@ export const getJobsOfCompany = async (req, res, next) => {
     return next(new Error('Error while query the companies'))
   }
 
+  // create array of jobs and flat it
   let jobs = []
   jobs.push(companies.map((company) => company.jobs))
 
@@ -133,6 +144,9 @@ export const getJobsOfCompany = async (req, res, next) => {
     jobs: jobs.length ? jobs.flat(Infinity) : [],
   })
 }
+
+// Create Query Object
+// find jobs
 export const getJobsWithFilter = async (req, res, next) => {
   const { authUser, isUserAuthorized } = req
   if (!isUserAuthorized)
@@ -145,6 +159,7 @@ export const getJobsWithFilter = async (req, res, next) => {
     technicalSkills,
   } = req.query
 
+  // Create Query Object
   const query = {}
   jobTitle && (query.jobTitle = { $regex: jobTitle, $options: 'i' })
   jobLocation && (query.jobLocation = jobLocation)
@@ -155,21 +170,27 @@ export const getJobsWithFilter = async (req, res, next) => {
   technicalSkillsArray?.length &&
     (query.technicalSkills = { $all: technicalSkillsArray })
 
+  // find jobs
   const jobs = await Job.find(query)
   if (!jobs) return next(new Error('Error while filtering the jobs '))
   res.status(200).json({ message: 'Jobs', jobs })
 }
+
+/**
+ * check if the job is existed
+ * check if the user is applied before
+ * upload the file
+ * create the application
+ */
 export const applyToJob = async (req, res, next) => {
-  /**
-   * check the authorization
-   *
-   */
   const { jobId } = req.params
   const { userTechSkills, userSoftSkills } = req.body
   const userResume = req.file?.path
   const { authUser, isUserAuthorized } = req
   if (!isUserAuthorized)
     return next(new Error('Not Authorized', { cause: 403 }))
+
+  // check if the job is existed
   const isJobExisted = await dbMethods.findByIdDocument(Job, jobId)
   if (!isJobExisted.success)
     return next(
@@ -177,6 +198,8 @@ export const applyToJob = async (req, res, next) => {
         cause: isJobExisted.status,
       })
     )
+
+  // check if the user is applied before
   const isUserApplied = await dbMethods.findOneDocument(Application, {
     jobId,
     userId: authUser._id,
@@ -184,6 +207,7 @@ export const applyToJob = async (req, res, next) => {
   if (isUserApplied.success)
     return next(new Error('This user is already applied for this job'))
 
+  // upload the file
   const pdfResume = await cloudinaryConnection().uploader.upload(userResume, {
     folder: `jobSearchApp/companies/companyId-${isJobExisted.result.companyId}/jobId-${isJobExisted.result._id}`,
     public_id: authUser._id,
@@ -192,6 +216,8 @@ export const applyToJob = async (req, res, next) => {
     return next(
       new Error('Error while uploading the profile Image, please try again')
     )
+
+  // create the application
   const newApplication = await dbMethods.createDocument(Application, {
     jobId,
     userId: authUser._id,

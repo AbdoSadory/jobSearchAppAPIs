@@ -224,12 +224,23 @@ export const deleteProfile = async (req, res, next) => {
   }
   // delete Assets
   try {
-    await cloudinaryConnection().api.delete_resources_by_prefix(
-      `jobSearchApp/users/${authUser._id}`
+    const sub_folders = await cloudinaryConnection().api.sub_folders(
+      'jobSearchApp/users'
     )
-    await cloudinaryConnection().api.delete_folder(
-      `jobSearchApp/users/${authUser._id}`
-    )
+    let isFolderExisted = false
+    sub_folders.folders.map((subFolder) => {
+      if (subFolder.name === `${authUser._id}`) {
+        isFolderExisted = true
+      }
+    })
+    if (isFolderExisted) {
+      await cloudinaryConnection().api.delete_resources_by_prefix(
+        `jobSearchApp/users/${authUser._id}`
+      )
+      await cloudinaryConnection().api.delete_folder(
+        `jobSearchApp/users/${authUser._id}`
+      )
+    }
   } catch (error) {
     return next(new Error(`Error While deleting media ${error}`))
   }

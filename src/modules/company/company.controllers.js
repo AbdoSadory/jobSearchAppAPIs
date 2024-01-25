@@ -174,14 +174,25 @@ export const deleteCompany = async (req, res, next) => {
   }
   //  delete Media
   try {
-    await cloudinaryConnection().api.delete_resources_by_prefix(
-      `jobSearchApp/companies/companyId-${isCompanyExisted.result._id}`
+    const sub_folders = await cloudinaryConnection().api.sub_folders(
+      'jobSearchApp/companies'
     )
-    await cloudinaryConnection().api.delete_folder(
-      `jobSearchApp/companies/companyId-${isCompanyExisted.result._id}`
-    )
+    let isFolderExisted = false
+    sub_folders.folders.map((subFolder) => {
+      if (subFolder.name === `companyId-${isCompanyExisted.result._id}`) {
+        isFolderExisted = true
+      }
+    })
+    if (isFolderExisted) {
+      await cloudinaryConnection().api.delete_resources_by_prefix(
+        `jobSearchApp/companies/companyId-${isCompanyExisted.result._id}`
+      )
+      await cloudinaryConnection().api.delete_folder(
+        `jobSearchApp/companies/companyId-${isCompanyExisted.result._id}`
+      )
+    }
   } catch (error) {
-    return next(new Error(`Error While deleting media ${error}`))
+    return next(new Error(`Error While deleting media ${error.message}`))
   }
   res.status(200).json({ message: 'Deleted Successfully' })
 }

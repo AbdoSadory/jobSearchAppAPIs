@@ -4,7 +4,6 @@ export const authorizationHandler = (...userRole) => {
   */
   return async (req, res, next) => {
     const { authUser } = req
-    console.log(authUser)
 
     const isUserAuthorizer = userRole.includes(authUser.role)
 

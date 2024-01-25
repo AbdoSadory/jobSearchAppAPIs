@@ -4,6 +4,8 @@ import db_connection from './DB/connection.js'
 import globalErrorHandler from './src/middlewares/globalErrorHandler.js'
 import cloudinaryConnection from './src/utils/mediaHostConnection.js'
 import userRouter from './src/modules/user/user.routes.js'
+import companyRouter from './src/modules/company/company.routes.js'
+import jobRouter from './src/modules/job/job.routes.js'
 
 config()
 const app = express()
@@ -12,6 +14,8 @@ db_connection()
 cloudinaryConnection()
 
 app.use('/users', userRouter)
+app.use('/company', companyRouter)
+app.use('/jobs', jobRouter)
 
 app.use('*', (req, res, next) => {
   next(new Error('Invalid URL'))

@@ -111,6 +111,23 @@ export const findByIdAndDeleteDocument = async (modelName, docId) => {
     result: null,
   }
 }
+export const findOneAndDeleteDocument = async (modelName, query) => {
+  const isDocumentExisted = await modelName.findOneAndDelete(query)
+  if (!isDocumentExisted) {
+    return {
+      message: `No Document is found`,
+      status: 404,
+      success: false,
+      result: null,
+    }
+  }
+  return {
+    message: 'Document has been found',
+    status: 204,
+    success: true,
+    result: null,
+  }
+}
 export const findDocuments = async (modelName, query) => {
   const documents = await modelName.find(query).sort({ createdAt: -1 })
   if (!documents.length) {

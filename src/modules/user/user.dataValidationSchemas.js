@@ -1,6 +1,7 @@
 import Joi from 'joi'
 import joiDate from '@joi/date'
 import { Types } from 'mongoose'
+import { userRolesEnum } from '../../utils/generalSystemConstants.js'
 
 const joi = Joi.extend(joiDate) // to use @joi/date in validation the date format
 
@@ -33,7 +34,10 @@ export const signUpSchema = {
         '*': 'DOB (date of birth) must be in YYYY-MM-DD format and before 2006-01-01 (the legal working age)',
       }),
     mobileNumber: joi.string().trim().min(7).max(15).required(),
-    role: joi.string().trim().valid('company_HR', 'user'),
+    role: joi
+      .string()
+      .trim()
+      .valid(...userRolesEnum),
   }),
 }
 
@@ -98,6 +102,7 @@ export const forgetPasswordSchema = {
 export const verifyOTPandUpdatePasswordSchema = {
   body: joi
     .object({
+      email: joi.string().email().trim().required(),
       newPassword: joi.string().trim().alphanum().min(6).required(),
       otp: joi.string().length(6).trim().required(),
     })

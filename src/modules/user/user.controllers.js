@@ -279,8 +279,9 @@ export const forgetPassword = async (req, res, next) => {
   /**
    * Check if user in DB using email
    * create unique random otp (length=6)
-   * check if user gets otp doc in db, if TRUE, update it with new OTP
-   * in case it's first time to forget password , create OTP document with email and OTP code
+   * Hashing the otp
+   * check if user gets otp doc in db, if TRUE, update it with new hashed OTP
+   * in case it's first time to forget password , create OTP document with email and hashed OTP code
    * send it back to user and wait him to send it back through api "users/verifyOTPAndUpdatePassword"
    */
   const { email } = req.body
@@ -292,57 +293,69 @@ export const forgetPassword = async (req, res, next) => {
     )
   }
   const otp = generateUniqueString(6)
+  const hashedOTP = bcryptjs.hashSync(otp, parseInt(process.env.SALT))
+
   const isOTPDocExisted = await dbMethods.findOneDocument(OTP, { email })
+
   if (isOTPDocExisted.success) {
-    isOTPDocExisted.result.otp = otp
+    isOTPDocExisted.result.otp = hashedOTP
     await isOTPDocExisted.result.save()
     return res.status(isOTPDocExisted.status).json({
       message: "Please send OTP to 'users/verifyOTPAndUpdatePassword'",
-      OTP: isOTPDocExisted.result.otp,
+      OTP: otp,
     })
   }
-  const newOTP = await dbMethods.createDocument(OTP, { email, otp })
+  const newOTP = await dbMethods.createDocument(OTP, { email, otp: hashedOTP })
   if (!newOTP.success) {
     return next(new Error('Error while creating OTP, please try again'))
   }
   res.status(newOTP.status).json({
     message: "Please send OTP to 'users/verifyOTPAndUpdatePassword'",
-    OTP: newOTP.result.otp,
+    OTP: otp,
   })
 }
 export const getOTPandNewPassword = async (req, res, next) => {
   /**
-   * Verify the OTP if it's existed
-   * Verify the OTP if it's not used before
+   * Verify the Email user if it's existed in OTP collection
+   * check the OTP if it's not used before
+   * compare OTP for authentication case
    * hashing the new password
-   * update password with the new one
+   * Get the user and update password with the new one
    * send back the user data
    */
-  const { otp, newPassword } = req.body
-  const isOTPDocExisted = await dbMethods.findOneDocument(OTP, { otp })
-  if (!isOTPDocExisted.success) {
-    return next(new Error('Invalid OTP, Please try again', { cause: 401 }))
+  const { otp, email, newPassword } = req.body
+  const isEmailExistedOTP = await dbMethods.findOneDocument(OTP, { email })
+  if (!isEmailExistedOTP.success) {
+    return next(new Error('Invalid Email, Please try again', { cause: 401 }))
   }
-  if (isOTPDocExisted.result.isUsed) {
+  if (isEmailExistedOTP.result.isUsed) {
     return next(
       new Error('This OTP has been used before, Please try again', {
         cause: 401,
       })
     )
   }
+
+  const isOTPRight = bcryptjs.compareSync(otp, isEmailExistedOTP.result.otp)
+  if (!isOTPRight)
+    return next(
+      new Error('Invalid OTP, Please try again', {
+        cause: 401,
+      })
+    )
   const hashingNewPassword = bcryptjs.hashSync(
     newPassword,
     parseInt(process.env.SALT)
   )
   const getUser = await dbMethods.findOneDocument(User, {
-    email: isOTPDocExisted.result.email,
+    email,
   })
   if (!getUser.success) return next(new Error('No User with this Email'))
 
   getUser.result.password = hashingNewPassword
   await getUser.result.save()
-  isOTPDocExisted.result.isUsed = true
-  await isOTPDocExisted.result.save()
+  isEmailExistedOTP.result.isUsed = true
+  await isEmailExistedOTP.result.save()
 
   res
     .status(200)

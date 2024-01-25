@@ -30,7 +30,7 @@ export const authHandler = () => {
       req.authUser = findUser.result
       next()
     } catch (error) {
-      next(new Error('catch error in auth middleware', { cause: 500 }))
+      next(new Error('Invalid access token please check it', { cause: 500 }))
     }
   }
 }

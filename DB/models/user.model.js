@@ -1,4 +1,8 @@
 import mongoose from 'mongoose'
+import {
+  userRolesEnum,
+  userStatusEnum,
+} from '../../src/utils/generalSystemConstants.js'
 
 const userSchema = new mongoose.Schema(
   {
@@ -51,25 +55,25 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['company_HR', 'user'],
+      enum: userRolesEnum,
       required: true,
-      default: 'user',
+      default: userRolesEnum[0],
     },
     status: {
       type: String,
-      enum: ['online', 'offline'],
+      enum: userStatusEnum,
       required: true,
-      default: 'offline',
+      default: userStatusEnum[0],
     },
     profileImage: {
       secure_url: {
         type: String,
         default:
-          'https://res.cloudinary.com/dsjy29z66/image/upload/v1705850816/jobSearchApp/defaultProfileImage_i6axjh.png',
+          'https://res.cloudinary.com/dsjy29z66/image/upload/v1705864399/jobSearchApp/users/defaultProfileImage_kkebpj.png',
       },
       public_id: {
         type: String,
-        default: 'jobSearchApp/defaultProfileImage_i6axjh',
+        default: 'jobSearchApp/users/defaultProfileImage_kkebpj',
       },
     },
   },

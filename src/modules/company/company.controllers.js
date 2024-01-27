@@ -1,4 +1,5 @@
 import * as dbMethods from '../../../DB/dbMethods.js'
+import Application from '../../../DB/models/applications.mode.js'
 import Company from '../../../DB/models/company.model.js'
 import Job from '../../../DB/models/job.model.js'
 import cloudinaryConnection from '../../utils/mediaHostConnection.js'
@@ -172,6 +173,20 @@ export const deleteCompany = async (req, res, next) => {
   if (!deleteCompany.success) {
     return next(new Error('Error while deleting the company from database'))
   }
+
+  const jobs = await dbMethods.findDocuments(Job, {
+    companyId: isCompanyExisted.result._id,
+  })
+  const jobsIds = jobs.result.map((job) => job._id)
+  for (let jobId of jobsIds) {
+    const deleteApplications = await Application.deleteMany({ jobId })
+    if (!deleteApplications)
+      return next(new Error('Error While deleting Application'))
+  }
+  const deleteJobs = await Job.deleteMany({
+    companyId: isCompanyExisted.result._id,
+  })
+  if (!deleteJobs) return next(new Error('Error While deleting Jobs'))
   //  delete Media
   try {
     const sub_folders = await cloudinaryConnection().api.sub_folders(

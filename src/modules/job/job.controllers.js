@@ -1,5 +1,5 @@
 import * as dbMethods from '../../../DB/dbMethods.js'
-import Application from '../../../DB/models/applications.mode.js'
+import Application from '../../../DB/models/applications.model.js'
 import Company from '../../../DB/models/company.model.js'
 import Job from '../../../DB/models/job.model.js'
 import cloudinaryConnection from '../../utils/mediaHostConnection.js'

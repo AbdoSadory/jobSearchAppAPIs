@@ -2,7 +2,6 @@
 
 A Job Search App API is similar to linkedIn website to create company, job an apply for a job by create application, using NodeJS runtime environment and ExpressJS as the server framework.
 
-
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Running the API](#running-the-api)
@@ -82,8 +81,6 @@ Following ExpressJS Structure:
 
 ## Endpoints
 
-### Check APIs Documentation : https://documenter.getpostman.com/view/27228437/2s9YsKgBt3
-
 ### User
 
 | Method | URL                                   | Description                                         |
@@ -115,12 +112,12 @@ Following ExpressJS Structure:
 
 ### Jobs
 
-| Method | URL                            | Description                                                          |
-| ------ | ------------------------------ | -------------------------------------------------------------------- |
-| GET    | `/jobs/getJobsWithFullInfo`    | Get all jobs with Full Info and must be logged In                    |
-| GET    | `/jobs/getJobsWithCompanyName` | Get jobs wit company name and must be logged In                      |
-| GET    | `/jobs/getJobsWithFilter`      | Get all jobs using filter in query params and must be logged In      |
-| POST   | `/jobs/addJob`                 | add new job and must be HR , logged In and add it for his company    |
-| POST   | `/jobs/applyJob/:jobId`        | Add application for job and must be user role, logged In             |
+| Method | URL                            | Description                                                         |
+| ------ | ------------------------------ | ------------------------------------------------------------------- |
+| GET    | `/jobs/getJobsWithFullInfo`    | Get all jobs with Full Info and must be logged In                   |
+| GET    | `/jobs/getJobsWithCompanyName` | Get jobs wit company name and must be logged In                     |
+| GET    | `/jobs/getJobsWithFilter`      | Get all jobs using filter in query params and must be logged In     |
+| POST   | `/jobs/addJob`                 | add new job and must be HR , logged In and add it for his company   |
+| POST   | `/jobs/applyJob/:jobId`        | Add application for job and must be user role, logged In            |
 | PUT    | `/jobs/updateJob/:jobId`       | Update job and must be HR , logged In and update it for his company |
-| DELETE | `/jobs/deleteJob/:jobId`       | Delete job and must be HR , logged In and delete it for his company  |
+| DELETE | `/jobs/deleteJob/:jobId`       | Delete job and must be HR , logged In and delete it for his company |

@@ -110,7 +110,6 @@ Following ExpressJS Structure:
 | GET    | `/company/companyJobsApplications/:companyId` | get company applications and must be logged In        |
 | POST   | `/company/createCompany`                      | Create new company and must be logged In with HR role |
 | PUT    | `/company/updateCompany`                      | Update company and must be logged In with HR role     |
-| PUT    | `/company/assignTaskToUser`                   | Assign company to user and must be logged In          |
 | PUT    | `/company/updateProfileImage/:companyId`      | Change Profile Image and must be logged In            |
 | DELETE | `/company/deleteCompany`                      | Delete company and must be logged In with HR role     |
 
@@ -123,5 +122,5 @@ Following ExpressJS Structure:
 | GET    | `/jobs/getJobsWithFilter`      | Get all jobs using filter in query params and must be logged In      |
 | POST   | `/jobs/addJob`                 | add new job and must be HR , logged In and add it for his company    |
 | POST   | `/jobs/applyJob/:jobId`        | Add application for job and must be user role, logged In             |
-| PUT    | `/jobs/updateJob/:jobId`       | Update task and must be HR , logged In and update it for his company |
-| DELETE | `/jobs/deleteJob/:jobId`       | Delete Job and must be HR , logged In and delete it for his company  |
+| PUT    | `/jobs/updateJob/:jobId`       | Update job and must be HR , logged In and update it for his company |
+| DELETE | `/jobs/deleteJob/:jobId`       | Delete job and must be HR , logged In and delete it for his company  |

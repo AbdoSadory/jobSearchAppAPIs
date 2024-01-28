@@ -1,7 +1,7 @@
 # Job Search App
 
 A Job Search App API is similar to linkedIn website to create company, job an apply for a job by create application, using NodeJS runtime environment and ExpressJS as the server framework.
-The API will support creating, viewing, editing, and deleting tasks.
+
 
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)

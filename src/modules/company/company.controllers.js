@@ -186,7 +186,8 @@ export const deleteCompany = async (req, res, next) => {
   const deleteJobs = await Job.deleteMany({
     companyId: isCompanyExisted.result._id,
   })
-  if (!deleteJobs) return next(new Error('Error While deleting Jobs'))
+  if (!deleteJobs.deletedCount)
+    return next(new Error('Error While deleting Jobs'))
   //  delete Media
   try {
     const sub_folders = await cloudinaryConnection().api.sub_folders(

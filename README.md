@@ -81,19 +81,21 @@ Following ExpressJS Structure:
 
 ## Endpoints
 
+### Check APIs Documentation : https://documenter.getpostman.com/view/27228437/2s9YytgLa7
+
 ### User
 
 | Method | URL                                   | Description                                         |
 | ------ | ------------------------------------- | --------------------------------------------------- |
 | GET    | `/users/myProfile`                    | Get Private Profile and must be logged In           |
 | GET    | `/users/allAccountsWithRecoveryEmail` | Get Users accounts using same recoveryEmail         |
+| GET    | `/users/userProfile/:userId`          | Get Profile of users using Id and must be logged In |
 | POST   | `/users/signUp`                       | Create a new user account                           |
 | POST   | `/users/signIn`                       | Authenticate and get access token                   |
-| POST   | `/users/userProfile/:userId`          | Get Profile of users using Id and must be logged In |
+| POST   | `/users/forgetPassword`               | Forget Password                                     |
+| POST   | `/users/verifyOTPAndUpdatePassword`   | Send OTP to change password with new one            |
 | PUT    | `/users/updateProfile`                | Update User Profile and must be logged In           |
 | PUT    | `/users/changePassword`               | Change Password and must be logged In               |
-| PUT    | `/users/forgetPassword`               | Forget Password                                     |
-| POST   | `/users/verifyOTPAndUpdatePassword`   | Send OTP to change password with new one            |
 | PUT    | `/users/updateProfileImage`           | Change Profile Image and must be logged In          |
 | DELETE | `/users/deleteProfile`                | Delete User Profile and must be logged In           |
 
@@ -101,7 +103,6 @@ Following ExpressJS Structure:
 
 | Method | URL                                           | Description                                           |
 | ------ | --------------------------------------------- | ----------------------------------------------------- |
-| GET    | `/company/createCompany`                      | Retrieve all company                                  |
 | GET    | `/company/companyDetails/:companyId`          | get company and must be logged In                     |
 | GET    | `/company/searchByName`                       | get company using query params and must be logged In  |
 | GET    | `/company/companyJobsApplications/:companyId` | get company applications and must be logged In        |

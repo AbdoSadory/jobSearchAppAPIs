@@ -16,7 +16,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"firstName\":\"ahmed\",\r\n    \"lastName\":\"ahmed\",\r\n    \"email\":\"ahmed@hr.com\",\r\n    \"recoveryEmail\":\"ahmed2@hr.com\",\r\n    \"DOB\":\"1994-03-02\",\r\n    \"password\":\"123456789\",\r\n    \"mobileNumber\":\"0100000003\",\r\n    \"role\":\"company_HR\"\r\n}",
+							"raw": "{\r\n    \"firstName\":\"ahmed\",\r\n    \"lastName\":\"ahmed\",\r\n    \"email\":\"abdo2@user.com\",\r\n    \"recoveryEmail\":\"ahmed2@hr.com\",\r\n    \"DOB\":\"1994-03-02\",\r\n    \"password\":\"123456789\",\r\n    \"mobileNumber\":\"0100000005\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -35,7 +35,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"email\":\"ahmed@hr.com\",\r\n    \"password\":\"123456789\"\r\n}",
+							"raw": "{\r\n    \"email\":\"abdo2@user.com\",\r\n    \"password\":\"123456789\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -83,7 +83,8 @@
 								"type": "text"
 							}
 						],
-						"url": "http://localhost:3000/users/deleteProfile"
+						"url": "http://localhost:3000/users/deleteProfile",
+						"description": "Delete profile, user must be logged In"
 					},
 					"response": []
 				},
@@ -98,7 +99,8 @@
 								"type": "text"
 							}
 						],
-						"url": "http://localhost:3000/users/userProfile/65ac413f9f85d94b8c938efc"
+						"url": "http://localhost:3000/users/userProfile/65ac413f9f85d94b8c938efc",
+						"description": "user public profile"
 					},
 					"response": []
 				},
@@ -113,7 +115,8 @@
 								"type": "text"
 							}
 						],
-						"url": "http://localhost:3000/users/myProfile"
+						"url": "http://localhost:3000/users/myProfile",
+						"description": "user private profile"
 					},
 					"response": []
 				},
@@ -134,7 +137,8 @@
 								}
 							}
 						},
-						"url": "http://localhost:3000/users/allAccountsWithRecoveryEmail"
+						"url": "http://localhost:3000/users/allAccountsWithRecoveryEmail",
+						"description": "get all accounts using the same recovery email"
 					},
 					"response": []
 				},
@@ -158,7 +162,8 @@
 								}
 							}
 						},
-						"url": "http://localhost:3000/users/updatePassword"
+						"url": "http://localhost:3000/users/updatePassword",
+						"description": "update password, user must be logged In"
 					},
 					"response": []
 				},
@@ -219,7 +224,8 @@
 								}
 							]
 						},
-						"url": "http://localhost:3000/users/updateProfileImage"
+						"url": "http://localhost:3000/users/updateProfileImage",
+						"description": "Change profile Image, user must be logged In"
 					},
 					"response": []
 				}
@@ -236,7 +242,7 @@
 						"header": [
 							{
 								"key": "accesstoken",
-								"value": "jobSearchAppToken_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1YjJiZDc1MWE0YmUxYTkzZjI2ZmU5NiIsImlhdCI6MTcwNjIxMzA2OCwiZXhwIjoxNzA2Mjk5NDY4fQ.GqNu-92lzGakXETasGRwb1u_xrdX4JP9elRTrKUSXZY",
+								"value": "jobSearchAppToken_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1YjU0ZGZhOTAzMThjZTUzNGRiOTZhYiIsImlhdCI6MTcwNjM4MDgwNSwiZXhwIjoxNzA2NDY3MjA1fQ.UMCje-s38Q7Gl1K20Pe3w8dWa8aDTwgjMGwB24JxnCE",
 								"type": "text"
 							}
 						],
@@ -249,7 +255,8 @@
 								}
 							}
 						},
-						"url": "http://localhost:3000/company/createCompany"
+						"url": "http://localhost:3000/company/createCompany",
+						"description": "Create Company and the user must be HR, and logged In, plus he can create multiple companies"
 					},
 					"response": []
 				},
@@ -284,7 +291,7 @@
 						"header": [
 							{
 								"key": "accesstoken",
-								"value": "jobSearchAppToken_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1YjJiZDc1MWE0YmUxYTkzZjI2ZmU5NiIsImlhdCI6MTcwNjIxMzA2OCwiZXhwIjoxNzA2Mjk5NDY4fQ.GqNu-92lzGakXETasGRwb1u_xrdX4JP9elRTrKUSXZY",
+								"value": "jobSearchAppToken_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1YjU0ZGZhOTAzMThjZTUzNGRiOTZhYiIsImlhdCI6MTcwNjM4MDgwNSwiZXhwIjoxNzA2NDY3MjA1fQ.UMCje-s38Q7Gl1K20Pe3w8dWa8aDTwgjMGwB24JxnCE",
 								"type": "text"
 							}
 						],
@@ -349,21 +356,6 @@
 					"response": []
 				},
 				{
-					"name": "company jobs",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "accesstoken",
-								"value": "jobSearchAppToken_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1YWQ5MGNmNzg5MDRlMGQyM2NlODg3OSIsImlhdCI6MTcwNjA5NjkwMSwiZXhwIjoxNzA2MTgzMzAxfQ.x1dO2k1xkvaptBnMAzo4-CwHQB4IccLCPsZjxKLg26k",
-								"type": "text"
-							}
-						],
-						"url": "http://localhost:3000/company/companyJobs/65ad91e5d20fa17e3edd949d"
-					},
-					"response": []
-				},
-				{
 					"name": "company jobs applications",
 					"request": {
 						"method": "GET",
@@ -415,13 +407,13 @@
 						"header": [
 							{
 								"key": "accesstoken",
-								"value": "jobSearchAppToken_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1YWQ5MGNmNzg5MDRlMGQyM2NlODg3OSIsImlhdCI6MTcwNjE4NzA3MSwiZXhwIjoxNzA2MjczNDcxfQ.ckLdhyD-mUHZuBGJP8-r-RA6VL6UI8twQQnON4ip2O0",
+								"value": "jobSearchAppToken_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1YjU0ZGZhOTAzMThjZTUzNGRiOTZhYiIsImlhdCI6MTcwNjM4MDgwNSwiZXhwIjoxNzA2NDY3MjA1fQ.UMCje-s38Q7Gl1K20Pe3w8dWa8aDTwgjMGwB24JxnCE",
 								"type": "text"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n     \"companyEmail\":\"veolia@company.com\",\r\n        \"jobTitle\" :\"For Something Urgent 4\",\r\n        \"jobLocation\" :\"remotely\",\r\n        \"workingTime\" :\"part-time\",\r\n        \"seniorityLevel\" :\"junior\",\r\n        \"jobDescription\":\"For Something Urgent For Something Urgent For Something Urgent For Something Urgent\",\r\n        \"technicalSkills\":[\"Mongodb\",\"sql\"],\r\n        \"softSkills\" :[\"communication\",\"fast learner\"]\r\n}",
+							"raw": "{\r\n     \"companyEmail\":\"petro@company.com\",\r\n        \"jobTitle\" :\"For Something Urgent 4\",\r\n        \"jobLocation\" :\"remotely\",\r\n        \"workingTime\" :\"part-time\",\r\n        \"seniorityLevel\" :\"junior\",\r\n        \"jobDescription\":\"For Something Urgent For Something Urgent For Something Urgent For Something Urgent\",\r\n        \"technicalSkills\":[\"Mongodb\",\"sql\"],\r\n        \"softSkills\" :[\"communication\",\"fast learner\"]\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -618,7 +610,7 @@
 						"header": [
 							{
 								"key": "accesstoken",
-								"value": "jobSearchAppToken_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1YWQ3YmRjZGRkMmViNDllNDJlYzRiNSIsImlhdCI6MTcwNjE4NjE5NywiZXhwIjoxNzA2MjcyNTk3fQ.Msb4ojk9pc_ZzUVSpxPVqUK32CmN0HpkbdUC7N218so",
+								"value": "jobSearchAppToken_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1YjU0ZTYyOTAzMThjZTUzNGRiOTZjNyIsImlhdCI6MTcwNjM4MTAyNCwiZXhwIjoxNzA2NDY3NDI0fQ.tKfi39LMH7AoBNGbJDaE50vrl5UY7dHCAs695AV5yy0",
 								"type": "text"
 							}
 						],
@@ -642,7 +634,7 @@
 								}
 							]
 						},
-						"url": "http://localhost:3000/jobs/applyJob/65b0fe67aa87e66aed3b9750"
+						"url": "http://localhost:3000/jobs/applyJob/65b54e3e90318ce534db96b9"
 					},
 					"response": []
 				}

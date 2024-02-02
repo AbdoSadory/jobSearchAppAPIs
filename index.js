@@ -13,13 +13,12 @@ app.use(express.json())
 db_connection()
 cloudinaryConnection()
 
+app.get('/', (req, res, next) => {
+  res.status(200).json({ message: 'Welcome To Job Search App' })
+})
 app.use('/users', userRouter)
 app.use('/company', companyRouter)
 app.use('/jobs', jobRouter)
-
-app.use('/', (req, res, next) => {
-  res.status(200).json({ message: 'Welcome To Job Search App' })
-})
 
 app.use('*', (req, res, next) => {
   next(new Error('Invalid URL'))

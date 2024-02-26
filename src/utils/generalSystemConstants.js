@@ -4,13 +4,7 @@ export const userRolesConstants = {
 }
 export const userRolesEnum = [userRolesConstants.USER, userRolesConstants.HR]
 export const userStatusEnum = ['offline', 'online']
-export const numberOfEmployeesEnum = [
-  '10-50',
-  '50-100',
-  '100-500',
-  '500-1000',
-  '>1000',
-]
+
 export const companyIndustryEnum = [
   'education',
   'construction',

@@ -98,7 +98,7 @@ export const updateCompany = async (req, res, next) => {
         new Error(
           'This Company Email is existed for another company, try another one',
           {
-            cause: 400,
+            cause: 409,
           }
         )
       )
@@ -121,7 +121,7 @@ export const updateCompany = async (req, res, next) => {
         new Error(
           'This Company Name is existed for another company, try another one',
           {
-            cause: 400,
+            cause: 409,
           }
         )
       )

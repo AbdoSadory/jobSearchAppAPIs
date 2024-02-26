@@ -1,8 +1,5 @@
 import Joi from 'joi'
-import {
-  companyIndustryEnum,
-  numberOfEmployeesEnum,
-} from '../../utils/generalSystemConstants.js'
+import { companyIndustryEnum } from '../../utils/generalSystemConstants.js'
 import { Types } from 'mongoose'
 
 const objectIdValidation = (value, helper) => {
@@ -17,9 +14,10 @@ export const createCompanySchema = {
       .valid(...companyIndustryEnum)
       .required(),
     address: Joi.string().trim().required(),
-    numberOfEmployees: Joi.string()
-      .valid(...numberOfEmployeesEnum)
-      .required(),
+    numberOfEmployees: Joi.object({
+      from: Joi.number().min(1).required(),
+      to: Joi.number().min(Joi.ref('from')).required(),
+    }).required(),
     companyEmail: Joi.string().email().trim().required(),
   }),
 }
@@ -30,7 +28,10 @@ export const updateCompanySchema = {
     description: Joi.string().trim(),
     industry: Joi.string().valid(...companyIndustryEnum),
     address: Joi.string().trim(),
-    numberOfEmployees: Joi.string().valid(...numberOfEmployeesEnum),
+    numberOfEmployees: Joi.object({
+      from: Joi.number().min(1).required(),
+      to: Joi.number().min(Joi.ref('from')).required(),
+    }),
     companyEmail: Joi.string().email().trim(),
   }),
 }

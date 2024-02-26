@@ -1,8 +1,5 @@
 import mongoose from 'mongoose'
-import {
-  companyIndustryEnum,
-  numberOfEmployeesEnum,
-} from '../../src/utils/generalSystemConstants.js'
+import { companyIndustryEnum } from '../../src/utils/generalSystemConstants.js'
 
 const companyShema = new mongoose.Schema(
   {
@@ -30,9 +27,12 @@ const companyShema = new mongoose.Schema(
       default: 'no address yet',
     },
     numberOfEmployees: {
-      type: String,
-      enum: numberOfEmployeesEnum,
-      default: '10-50',
+      from: {
+        type: Number,
+        required: true,
+        min: 1,
+      },
+      to: { type: Number, required: true },
     },
     companyEmail: {
       type: String,

@@ -6,6 +6,7 @@ import generateUserToken from '../../utils/generateUserToken.js'
 import OTP from '../../../DB/models/OTP.model.js'
 import generateUniqueString from '../../utils/generateUniqueString.js'
 import cloudinaryConnection from '../../utils/mediaHostConnection.js'
+import jwt from 'jsonwebtoken'
 /**
  * 1- Check Email if it is existed
  * 2- Check Mobil Number if it is existed
@@ -80,24 +81,26 @@ export const signUp = async (req, res, next) => {
 */
 export const signIn = async (req, res, next) => {
   const { email, mobileNumber, password } = req.body
-  let user
-  // 1- Check on Incoming Data
-  // 2- Find User with email  or mobile number
-  if (email) {
-    user = await dbMethods.findOneDocument(User, { email })
-    if (!user.success) {
-      return next(new Error('Invalid Credentials', { cause: 400 }))
-    }
-  }
-  if (mobileNumber && !user) {
-    user = await dbMethods.findOneDocument(User, { mobileNumber })
-    if (!user.success) {
-      return next(new Error('Invalid Credentials', { cause: 400 }))
-    }
-  }
 
-  // 3- Check if incoming password doesn't match the Database hashed password
-  const isPasswordMatched = bcryptjs.compareSync(password, user.result.password)
+  // 1- check Email or mobile number if they are existed for another user
+  let checkIfExisted = []
+  email && checkIfExisted.push({ email })
+  mobileNumber && checkIfExisted.push({ mobileNumber })
+  const isUserExisted = await dbMethods.findOneDocument(User, {
+    $or: checkIfExisted,
+  })
+  if (!isUserExisted.success) {
+    return next(
+      new Error('Invalid Credentials', {
+        cause: 409,
+      })
+    )
+  }
+  // 2- Check if incoming password doesn't match the Database hashed password
+  const isPasswordMatched = bcryptjs.compareSync(
+    password,
+    isUserExisted.result.password
+  )
   if (!isPasswordMatched) {
     return next(
       new Error('Invalid Credentials pw', {
@@ -105,15 +108,15 @@ export const signIn = async (req, res, next) => {
       })
     )
   }
-  user.result.status = 'online'
-  await user.result.save()
+  isUserExisted.result.status = 'online'
+  await isUserExisted.result.save()
 
-  // 4- Create Token
-  const token = generateUserToken({ id: user.result._id.toString() })
-  // 5- Send token and profile data in response
+  //3- Create Token
+  const token = generateUserToken({ id: isUserExisted.result._id.toString() })
+  // 4- Send token and profile data in response
   res
-    .status(user.status)
-    .json({ message: user.message, user: user.result, token })
+    .status(isUserExisted.status)
+    .json({ message: isUserExisted.message, user: isUserExisted.result, token })
 }
 
 /**
@@ -128,39 +131,27 @@ export const updateProfile = async (req, res, next) => {
   const { firstName, lastName, email, DOB, mobileNumber, recoveryEmail } =
     req.body
   const { authUser } = req
-  //  check Email if it's existed for another user
-  if (email) {
-    const isUserExisted = await dbMethods.findOneDocument(User, { email })
-    if (
-      isUserExisted.success &&
-      isUserExisted.result._id.toString() !== authUser._id.toString()
-    ) {
-      return next(
-        new Error('This Email is used by another user, try another one', {
-          cause: 400,
-        })
-      )
-    }
-  }
-  //   check mobile Number if it's  existed for another user
-  if (mobileNumber) {
-    const isMobileNumberExisted = await dbMethods.findOneDocument(User, {
-      mobileNumber,
-    })
-    if (
-      isMobileNumberExisted.success &&
-      isMobileNumberExisted.result._id.toString() !== authUser._id.toString()
-    ) {
-      return next(
-        new Error(
-          'This mobile number is used by another user, try another one',
-          {
-            cause: 400,
-          }
-        )
-      )
-    }
-  }
+
+  // //  check Email or mobile number if they are existed for another user
+  // let checkIfExisted = []
+  // email && checkIfExisted.push({ email })
+  // mobileNumber && checkIfExisted.push({ mobileNumber })
+  // const isUserExisted = await dbMethods.findOneDocument(User, {
+  //   $or: checkIfExisted,
+  // })
+  // if (
+  //   isUserExisted.success &&
+  //   isUserExisted.result._id.toString() !== authUser._id.toString()
+  // ) {
+  //   return next(
+  //     new Error(
+  //       'This Email or mobile number is used by another user, try another one',
+  //       {
+  //         cause: 409,
+  //       }
+  //     )
+  //   )
+  // }
 
   //  Get the user by id
   const user = await dbMethods.findByIdDocument(User, authUser._id)
@@ -168,23 +159,63 @@ export const updateProfile = async (req, res, next) => {
   firstName && (user.result.firstName = firstName.trim())
   lastName && (user.result.lastName = lastName.trim())
   user.result.username = `${user.result.firstName} ${user.result.lastName}`
-  // if Email is sent, check if it's not equal recovery email, to get account back
+
+  // if Email is sent
+  // 1- check if it's used by another user
+  // 2- and not equal recovery email, to get account back
   if (email) {
-    if (email !== user.result.recoveryEmail) {
-      user.result.email = email
-    } else {
+    const isEmailExistedForAnotherUser = await dbMethods.findOneDocument(User, {
+      email,
+    })
+    if (
+      isEmailExistedForAnotherUser.success &&
+      isEmailExistedForAnotherUser.result._id.toString() !==
+        authUser._id.toString()
+    ) {
+      return next(
+        new Error('This Email is used by another user, try another one', {
+          cause: 409,
+        })
+      )
+    }
+
+    if (email === user.result.recoveryEmail) {
       return next(
         new Error(
           'email should not be equal recovery email to be able to get back your account',
-          { cause: 400 }
+          { cause: 409 }
         )
       )
     }
+
+    user.result.email = email
   }
+
   DOB && (user.result.DOB = DOB)
 
-  mobileNumber && (user.result.mobileNumber = mobileNumber)
+  // if mobile number is sent, check if it's used by another user
+  if (mobileNumber) {
+    const isMobileNumberExistedForAnotherUser = await dbMethods.findOneDocument(
+      User,
+      { mobileNumber }
+    )
+    if (
+      isMobileNumberExistedForAnotherUser.success &&
+      isMobileNumberExistedForAnotherUser.result._id.toString() !==
+        authUser._id.toString()
+    ) {
+      return next(
+        new Error(
+          'This mobile number is used by another user, try another one',
+          {
+            cause: 409,
+          }
+        )
+      )
+    }
 
+    user.result.mobileNumber = mobileNumber
+  }
   // if Recovery Email is sent, check if it's not equal email, to get account back
   if (recoveryEmail) {
     if (recoveryEmail !== user.result.email) {
@@ -338,6 +369,7 @@ export const forgetPassword = async (req, res, next) => {
   const otp = generateUniqueString(6)
   // Hashing the otp
   const hashedOTP = bcryptjs.hashSync(otp, parseInt(process.env.SALT))
+  const hashedOTPTobBeSent = jwt.sign(otp, process.env.OTP_SECRET_CODE)
 
   // check if user gets otp doc in db, if TRUE, update it with new hashed OTP
   const isOTPDocExisted = await dbMethods.findOneDocument(OTP, { email })
@@ -359,7 +391,7 @@ export const forgetPassword = async (req, res, next) => {
   // send it back to user and wait him to send it back through api "users/verifyOTPAndUpdatePassword"
   res.status(newOTP.status).json({
     message: "Please send OTP to 'users/verifyOTPAndUpdatePassword'",
-    OTP: otp,
+    OTP: hashedOTPTobBeSent,
   })
 }
 
@@ -386,8 +418,15 @@ export const getOTPandNewPassword = async (req, res, next) => {
       })
     )
   }
+
+  // Decrypt the recieved OTP
+  const decryptedOTP = jwt.verify(otp, process.env.OTP_SECRET_CODE)
+
   // compare OTP for authentication case
-  const isOTPRight = bcryptjs.compareSync(otp, isEmailExistedOTP.result.otp)
+  const isOTPRight = bcryptjs.compareSync(
+    decryptedOTP,
+    isEmailExistedOTP.result.otp
+  )
   if (!isOTPRight)
     return next(
       new Error('Invalid OTP, Please try again', {

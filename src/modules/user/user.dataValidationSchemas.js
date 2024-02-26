@@ -104,7 +104,7 @@ export const verifyOTPandUpdatePasswordSchema = {
     .object({
       email: joi.string().email().trim().required(),
       newPassword: joi.string().trim().alphanum().min(6).required(),
-      otp: joi.string().length(6).trim().required(),
+      otp: joi.string().trim().required(),
     })
     .with('newPassword', 'otp'),
 }

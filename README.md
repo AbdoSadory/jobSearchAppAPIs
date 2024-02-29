@@ -5,7 +5,7 @@ A Job Search App API is similar to linkedIn website to create company, job an ap
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Running the API](#running-the-api)
-- [API Structure](#api-structure)
+- [File Structure](#file-structure)
 - [Endpoints](#endpoints)
 
 ## Prerequisites
@@ -30,7 +30,7 @@ To run in dev mode:
 npm run dev
 ```
 
-## API Structure
+## File Structure
 
 Following ExpressJS Structure:
 
